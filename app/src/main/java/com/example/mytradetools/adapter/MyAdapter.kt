@@ -22,22 +22,20 @@ class MyAdapter(
         holder.tvTitle.text = dataSet[position].name
         if (dataSet[position].sustainableTickersData != null) {
             holder.tv1.text =
-                dataSet[position].name + "永续：" + dataSet[position].sustainableTickersData?.last + "$"
+                dataSet[position].data1?.instId + "：" + dataSet[position].data1?.last + "$"
         }
 
         if (dataSet[position].nextQuarterTickersData != null) {
             holder.tv2.text =
-                dataSet[position].name + "次季：" + dataSet[position].nextQuarterTickersData?.last + "$"
+                dataSet[position].data2?.instId + "：" + dataSet[position].data2?.last + "$"
         }
 
-        if (dataSet[position].sustainableTickersData?.last != null && dataSet[position].nextQuarterTickersData?.last != null) {
-            var a = dataSet[position].sustainableTickersData?.last?.toFloat()
-            var b = dataSet[position].nextQuarterTickersData?.last?.toFloat()
+        if (dataSet[position].data1?.last != null && dataSet[position].data2?.last != null) {
+            var a = dataSet[position].data1?.last?.toFloat()
+            var b = dataSet[position].data2?.last?.toFloat()
             holder.tv3.text = "差价：" + a?.let { b?.minus(it) }.toString() + "$"
             holder.tv4.text = "差价率：" + a?.let { b?.div(it) }.toString() + "%"
         }
-
-
     }
 
     override fun getItemCount(): Int {

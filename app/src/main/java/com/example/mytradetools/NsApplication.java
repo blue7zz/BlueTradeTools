@@ -62,7 +62,6 @@ public class NsApplication extends Application {
         bindIntent.putExtra(DEVICE_TOKEN, deviceToken);
         startService(bindIntent);
         bindService(bindIntent, serviceConnection, BIND_AUTO_CREATE);
-
         mHandler.removeCallbacks(webSocketRunnable);
         mHandler.postDelayed(webSocketRunnable, HEART_BEAT_RATE);//开启心跳检测
     }

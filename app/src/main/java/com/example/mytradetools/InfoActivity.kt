@@ -1,5 +1,7 @@
 package com.example.mytradetools
 
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -15,6 +17,7 @@ import com.example.mytradetools.adapter.TickersDatas
 import com.example.mytradetools.bean.Arg
 import com.example.mytradetools.bean.TickersBean
 import com.example.mytradetools.bean.TickersMessage
+import com.example.mytradetools.databinding.ActivityInfoBinding
 import com.example.mytradetools.databinding.ActivityMainBinding
 import com.example.mytradetools.websocket.JWebSocketClient
 import com.google.gson.Gson
@@ -26,10 +29,10 @@ import java.net.URI
  * 自动重连
  *
  */
-class MainActivity : AppCompatActivity() {
+class InfoActivity : AppCompatActivity() {
     var gson: Gson = Gson()
     var mClient: JWebSocketClient? = null
-    var binding: ActivityMainBinding? = null    //自动生成
+    var binding: ActivityInfoBinding? = null    //自动生成
     val tickersDataList: ArrayList<TickersDatas> = ArrayList() //数据
     var myAdapter: MyAdapter? = null;
     var mHandler: Handler? = object : Handler(Looper.myLooper()!!) {
@@ -38,28 +41,27 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun initSocket() {
+        var uri: URI = URI.create(Config.wssUri)
+        mClient = object : JWebSocketClient(uri) {
+            override fun onMessage(message: String) {
+                super.onMessage(message)
+                messageDealWith(message)
+                sort()
+            }
 
-//    fun initSocket() {
-//        var uri: URI = URI.create(Config.wssUri)
-//        mClient = object : JWebSocketClient(uri) {
-//            override fun onMessage(message: String) {
-//                super.onMessage(message)
-//                messageDealWith(message)
-//                sort()
-//            }
-//
-//            override fun onOpen(handShakeData: ServerHandshake) {
-//                super.onOpen(handShakeData)
-//                mHandler?.post { binding?.connectBtn?.text = "连接成功" }
-//
-//            }
-//
-//            override fun onClose(code: Int, reason: String, remote: Boolean) {
-//                super.onClose(code, reason, remote)
-//                mHandler?.post { binding?.connectBtn?.text = "连接" }
-//            }
-//        }
-//    }
+            override fun onOpen(handShakeData: ServerHandshake) {
+                super.onOpen(handShakeData)
+                mHandler?.post { binding?.connectBtn?.text = "连接成功" }
+
+            }
+
+            override fun onClose(code: Int, reason: String, remote: Boolean) {
+                super.onClose(code, reason, remote)
+                mHandler?.post { binding?.connectBtn?.text = "连接" }
+            }
+        }
+    }
 
     /**
      * 排序，以差价率进行排序，差价最高的放在最前面
@@ -84,7 +86,7 @@ class MainActivity : AppCompatActivity() {
         //解析数据，目前只有单独一种类型
         //先遍历数据集合，判断有没有这个数据集合
         //进行归纳并且更新，每个instID，只能存储一个
-        //instId:"BTC-USDT-SWAP"
+        //instId:"BTC-USDT"
         //        BTC-USD-191115
         //并且每一个类型归纳为一个里面，目前来说
         val data: TickersBean = gson.fromJson(message, TickersBean::class.java)
@@ -98,20 +100,11 @@ class MainActivity : AppCompatActivity() {
                     //找到对应数据，开始判断类型塞入
                     //代码先写死，先实现，后面配置
                     when {
-                        s[2] == Config.sustainableCode -> {
-                            item.sustainableTickersData = data.data!![0]
+                        data.data!![0].instId.contains(tickers1) -> {
+                            item.data1 = data.data!![0]
                         }
-                        s[2] == "210430" -> {
-                            item.inTheWeekTickersData = data.data!![0]
-                        }
-                        s[2] == "210507" -> {
-                            item.nextWeekTickersData = data.data!![0]
-                        }
-                        s[2] == "210625" -> {
-                            item.inTheQuarterTickersData = data.data!![0]
-                        }
-                        s[2] == Config.nextQuarterCode -> {
-                            item.nextQuarterTickersData = data.data!![0]
+                        data.data!![0].instId.contains(tickers2) -> {
+                            item.data2 = data.data!![0]
                         }
                     }
                     mHandler?.postDelayed({ myAdapter?.notifyItemChanged(i) }, 50)
@@ -122,25 +115,14 @@ class MainActivity : AppCompatActivity() {
                 val tickersDatas = TickersDatas()
                 tickersDatas.name = s[0]
                 when {
-                    s[2] == Config.sustainableCode -> {
-                        tickersDatas.sustainableTickersData = data.data!![0]
+                    data.data!![0].instId.contains(tickers1) -> {
+                        tickersDatas.data1 = data.data!![0]
                     }
-                    s[2] == "210430" -> {
-                        tickersDatas.inTheWeekTickersData = data.data!![0]
-                    }
-                    s[2] == "210507" -> {
-                        tickersDatas.nextWeekTickersData = data.data!![0]
-                    }
-                    s[2] == "210625" -> {
-                        tickersDatas.inTheQuarterTickersData = data.data!![0]
-                    }
-                    s[2] == Config.nextQuarterCode -> {
-                        tickersDatas.nextQuarterTickersData = data.data!![0]
+                    data.data!![0].instId.contains(tickers2) -> {
+                        tickersDatas.data2 = data.data!![0]
                     }
                 }
-
                 tickersDataList.add(tickersDatas)
-
                 mHandler?.postDelayed(
                     { myAdapter?.notifyItemChanged(tickersDataList.size - 1) },
                     50
@@ -158,30 +140,30 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-//    fun initView() {
-//        testData()
-//        myAdapter = MyAdapter(tickersDataList)
-//        binding?.recyclerview?.layoutManager = LinearLayoutManager(this)
-//        binding?.recyclerview?.adapter = myAdapter
-//
-//        binding?.connectBtn?.setOnClickListener {
-//            mHandler?.post { binding?.connectBtn?.text = "连接中" }
-//
-//            mClient?.connect()
-//        }
-//        binding?.subscribeMsg?.setOnClickListener {
-//            //订阅
-//            var tickersMessage = TickersMessage();
-//            tickersMessage.op = "subscribe"
-//            tickersMessage.args = ArrayList()
-//            for (s in Config.symbolList) {
-//                tickersMessage.args?.add(Arg("tickers", s + "-USDT-" + Config.sustainableCode))
-//                tickersMessage.args?.add(Arg("tickers", s + "-USD-" + Config.nextQuarterCode))
-//            }
-//
-//            mClient?.send(gson.toJson(tickersMessage))
-//        }
-//    }
+    fun initView() {
+        testData()
+        myAdapter = MyAdapter(tickersDataList)
+        binding?.recyclerview?.layoutManager = LinearLayoutManager(this)
+        binding?.recyclerview?.adapter = myAdapter
+
+        binding?.connectBtn?.setOnClickListener {
+            mHandler?.post { binding?.connectBtn?.text = "连接中" }
+
+            mClient?.connect()
+        }
+        binding?.subscribeMsg?.setOnClickListener {
+            //订阅
+            var tickersMessage = TickersMessage();
+            tickersMessage.op = "subscribe"
+            tickersMessage.args = ArrayList()
+            for (s in Config.symbolList) {
+                tickersMessage.args?.add(Arg("tickers", s + tickers1))
+                tickersMessage.args?.add(Arg("tickers", s + tickers2))
+            }
+
+            mClient?.send(gson.toJson(tickersMessage))
+        }
+    }
 
 
     override fun onDestroy() {
@@ -193,16 +175,33 @@ class MainActivity : AppCompatActivity() {
         } finally {
             mClient = null
         }
-
     }
+
+    var tickers1: String = "-USDT"
+    var tickers2: String = "-USDT-210924"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
-//        initSocket()
-//        initView()
-//        binding.
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_info);
+        initSocket()
+        initView()
+        //需要传入2个参数，对比1 和对比2
+        //比如BTC-USDT-SWAP    //前面的BTC 不用传输因为会遍历所有的配置表，后面的需要
+        //比如BTC-USDT-210924
+        //BTC-USDT
+    }
 
+
+    companion object {
+        /**
+         * 定义一个特殊的启动
+         */
+        fun StartActivity(context: Context, tickers1: String, tickers2: String) {
+            val intent = Intent(context, InfoActivity::class.java)
+            intent.putExtra("tickers1", tickers1)
+            intent.putExtra("tickers2", tickers2)
+            context.startActivity(intent)
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

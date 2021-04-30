@@ -12,6 +12,9 @@ class TickersDatas : Comparable<Any> {
     //名称 BTC
     var name: String = ""
 
+    var data1: TickersData? = null //现货
+    var data2: TickersData? = null //需要对比的币种
+
     //永续
     var sustainableTickersData: TickersData? = null
 
