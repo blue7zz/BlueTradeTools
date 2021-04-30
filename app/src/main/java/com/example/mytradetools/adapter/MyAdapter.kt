@@ -19,12 +19,7 @@ class MyAdapter(
     }
 
     override fun onBindViewHolder(holder: ItemViewHolder, position: Int) {
-
-        if (dataSet[position].name != null) {
-            holder.tvTitle.text =
-                dataSet[position].name
-        }
-
+        holder.tvTitle.text = dataSet[position].name
         if (dataSet[position].sustainableTickersData != null) {
             holder.tv1.text =
                 dataSet[position].name + "永续：" + dataSet[position].sustainableTickersData?.last + "$"
@@ -40,7 +35,6 @@ class MyAdapter(
             var b = dataSet[position].nextQuarterTickersData?.last?.toFloat()
             holder.tv3.text = "差价：" + a?.let { b?.minus(it) }.toString() + "$"
             holder.tv4.text = "差价率：" + a?.let { b?.div(it) }.toString() + "%"
-
         }
 
 

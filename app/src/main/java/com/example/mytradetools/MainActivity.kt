@@ -32,7 +32,6 @@ class MainActivity : AppCompatActivity() {
     var binding: ActivityMainBinding? = null    //自动生成
     val tickersDataList: ArrayList<TickersDatas> = ArrayList() //数据
     var myAdapter: MyAdapter? = null;
-
     var mHandler: Handler? = object : Handler(Looper.myLooper()!!) {
         override fun handleMessage(msg: Message) {
             super.handleMessage(msg)
@@ -50,8 +49,6 @@ class MainActivity : AppCompatActivity() {
 
             override fun onOpen(handShakeData: ServerHandshake) {
                 super.onOpen(handShakeData)
-                Log.e("连接成功", handShakeData.httpStatus.toString())
-                Log.e("连接成功1", handShakeData.httpStatusMessage.toString())
                 mHandler?.post { binding?.connectBtn?.text = "连接成功" }
 
             }

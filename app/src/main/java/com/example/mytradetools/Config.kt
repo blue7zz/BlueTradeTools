@@ -1,7 +1,6 @@
 package com.example.mytradetools
 
 object Config {
-
     val wssUri: String = "wss://wspri.coinall.ltd:8443/ws/v5/public"
 
     //这里是商品代码,必须要有对应的交割合约和永续合约
